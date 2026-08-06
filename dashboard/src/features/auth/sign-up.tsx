@@ -14,7 +14,7 @@ export function SignUp() {
   const handleGoogle = async () => {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin + '/' },
+      options: { redirectTo: window.location.origin + '/auth-callback' },
     })
   }
 
@@ -24,7 +24,7 @@ export function SignUp() {
     setLoading(true)
     const { error: otpError } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: window.location.origin + '/' },
+      options: { emailRedirectTo: window.location.origin + '/auth-callback' },
     })
     setLoading(false)
     if (otpError) { setError(otpError.message || 'Something went wrong. Try again.'); return }
