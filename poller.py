@@ -4,7 +4,6 @@ import processor
 SUPABASE_URL = os.environ['SUPABASE_URL']
 SUPABASE_SERVICE_KEY = os.environ['SUPABASE_SERVICE_KEY']
 PRODUCT_ID = os.environ['PRODUCT_ID']
-ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY', '')
 
 HEADERS = {
     "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
@@ -16,25 +15,16 @@ def download_file(bucket, file_path):
     if file_path.startswith(bucket + "/"):
         file_path = file_path[len(bucket) + 1:]
     url = f"{SUPABASE_URL}/storage/v1/object/{bucket}/{file_path}"
-    resp = requests.get(url, headers={
-        "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
-        "apikey": SUPABASE_SERVICE_KEY
-    })
+    resp = requests.get(url, headers={"Authorization": f"Bearer {SUPABASE_SERVICE_KEY}", "apikey": SUPABASE_SERVICE_KEY})
     resp.raise_for_status()
     return resp.content
 
 def insert_notification(customer_id, title, body, ntype):
     try:
-        payload = {
-            "product_id": PRODUCT_ID,
-            "customer_id": customer_id,
-            "title": title,
-            "body": body,
-            "type": ntype,
-            "read": False
-        }
-        r = requests.post(f"{SUPABASE_URL}/rest/v1/notifications", headers=HEADERS, json=payload)
-        r.raise_for_status()
+        requests.post(f"{SUPABASE_URL}/rest/v1/notifications", headers=HEADERS, json={
+            "product_id": PRODUCT_ID, "customer_id": customer_id,
+            "title": title, "body": body, "type": ntype, "read": False
+        })
     except Exception as e:
         print(f"Notification error: {e}")
 
@@ -45,7 +35,7 @@ def update_job(job_id, status, output_file_path=None, result_summary=None):
     if result_summary:
         payload["result_summary"] = result_summary
     r = requests.patch(f"{SUPABASE_URL}/rest/v1/jobs?id=eq.{job_id}", headers=HEADERS, json=payload)
-    if r.status_code != 200:
+    if r.status_code not in (200, 204):
         print(f"Failed to update job {job_id}: {r.text}")
 
 def main():
@@ -60,6 +50,8 @@ def main():
                     job_id = job["id"]
                     customer_id = job["customer_id"]
                     input_file_path = job["input_file_path"]
+                    # Mark processing immediately to prevent re-processing
+                    update_job(job_id, "processing")
                     try:
                         file_bytes = download_file("uploads", input_file_path)
                     except Exception as e:
