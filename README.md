@@ -51,3 +51,4 @@ Dashboard: https://independent-contractor-smb-monthly-actua.vokrix.co
 Vercel project: independent-contractor-smb-monthly-actua
 Railway service: 13fb43a7-0ed7-4446-8fb6-688f40118140
 Railway: independent-contractor-smb-monthly-actua
+Cloudflare: independent-contractor-smb-monthly-actua.vokrix.co
