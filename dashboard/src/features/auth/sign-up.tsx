@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,7 +11,7 @@ export function SignUp() {
   const [step, setStep] = useState<'email' | 'code'>('email')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const navigate = useNavigate()
+
 
   const handleGoogle = async () => {
     await supabase.auth.signInWithOAuth({
@@ -44,7 +44,7 @@ export function SignUp() {
     })
     setLoading(false)
     if (verifyError) { setError('Invalid code. Please try again.'); return }
-    navigate({ to: '/' })
+    window.location.href = '/'
   }
 
   if (step === 'code') {
