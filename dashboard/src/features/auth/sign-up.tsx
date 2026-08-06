@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from '@tanstack/react-router'
+import { useNavigate } from '@tanstack/react-router'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -7,9 +7,11 @@ import { Label } from '@/components/ui/label'
 
 export function SignUp() {
   const [email, setEmail] = useState('')
-  const [sent, setSent] = useState(false)
+  const [code, setCode] = useState('')
+  const [step, setStep] = useState<'email' | 'code'>('email')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const navigate = useNavigate()
 
   const handleGoogle = async () => {
     await supabase.auth.signInWithOAuth({
@@ -18,26 +20,64 @@ export function SignUp() {
     })
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setLoading(true)
     const { error: otpError } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: window.location.origin + '/auth-callback' },
+      options: { shouldCreateUser: true },
     })
     setLoading(false)
     if (otpError) { setError(otpError.message || 'Something went wrong. Try again.'); return }
-    setSent(true)
+    setStep('code')
   }
 
-  if (sent) {
+  const handleVerifyCode = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+    const { error: verifyError } = await supabase.auth.verifyOtp({
+      email,
+      token: code,
+      type: 'email',
+    })
+    setLoading(false)
+    if (verifyError) { setError('Invalid code. Please try again.'); return }
+    navigate({ to: '/' })
+  }
+
+  if (step === 'code') {
     return (
       <div className='flex min-h-svh items-center justify-center p-4'>
-        <div className='w-full max-w-sm space-y-4 text-center'>
-          <h1 className='text-2xl font-semibold'>Check your email</h1>
-          <p className='text-sm text-muted-foreground'>We sent a magic link to <strong>{email}</strong>. Click it to get started.</p>
-          <button onClick={() => setSent(false)} className='text-sm text-muted-foreground underline'>Use a different email</button>
+        <div className='w-full max-w-sm space-y-6'>
+          <div className='space-y-1 text-center'>
+            <h1 className='text-2xl font-semibold'>Check your email</h1>
+            <p className='text-sm text-muted-foreground'>We sent a 6-digit code to <strong>{email}</strong></p>
+          </div>
+          <form onSubmit={handleVerifyCode} className='space-y-4'>
+            <div className='space-y-2'>
+              <Label htmlFor='code'>Verification code</Label>
+              <Input
+                id='code'
+                type='text'
+                inputMode='numeric'
+                placeholder='123456'
+                maxLength={8}
+                value={code}
+                onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+                required
+                autoFocus
+              />
+            </div>
+            {error && <p className='text-sm text-destructive'>{error}</p>}
+            <Button type='submit' className='w-full' disabled={loading}>
+              {loading ? 'Verifying...' : 'Continue'}
+            </Button>
+          </form>
+          <button onClick={() => { setStep('email'); setCode(''); setError('') }} className='w-full text-center text-sm text-muted-foreground underline'>
+            Use a different email
+          </button>
         </div>
       </div>
     )
@@ -63,20 +103,16 @@ export function SignUp() {
           <div className='absolute inset-0 flex items-center'><span className='w-full border-t' /></div>
           <div className='relative flex justify-center text-xs uppercase'><span className='bg-background px-2 text-muted-foreground'>or</span></div>
         </div>
-        <form onSubmit={handleSubmit} className='space-y-4'>
+        <form onSubmit={handleSendCode} className='space-y-4'>
           <div className='space-y-2'>
             <Label htmlFor='email'>Email</Label>
             <Input id='email' type='email' value={email} onChange={(e) => setEmail(e.target.value)} required />
           </div>
           {error && <p className='text-sm text-destructive'>{error}</p>}
           <Button type='submit' className='w-full' disabled={loading}>
-            {loading ? 'Sending link...' : 'Start free trial'}
+            {loading ? 'Sending code...' : 'Start free trial'}
           </Button>
         </form>
-        <p className='text-center text-sm text-muted-foreground'>
-          Already have an account?{' '}
-          <Link to='/sign-in' className='underline'>Sign in</Link>
-        </p>
       </div>
     </div>
   )
