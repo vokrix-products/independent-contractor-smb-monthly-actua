@@ -8,10 +8,7 @@ export const labels = [
 
 export type Severity = 'critical' | 'warning' | 'good' | 'neutral'
 
-export const severityToBadgeVariant: Record
-  Severity,
-  'destructive' | 'warning' | 'success' | 'secondary'
-> = {
+export const severityToBadgeVariant: Record<Severity, 'destructive' | 'warning' | 'success' | 'secondary'> = {
   critical: 'destructive',
   warning: 'warning',
   good: 'success',
