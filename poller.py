@@ -220,11 +220,7 @@ def main():
                             "customer_id": customer_id,
                             "title": rec.get("title", "Job Report"),
                             "status": rec.get("status", "on_track:good"),
-                            "details": json.dumps({
-                                **rec.get("details", {}),
-                                "summary": rec.get("summary", ""),
-                                "forecast": rec.get("forecast", "")
-                            }),
+                            "details": {**rec.get("details", {}), "summary": rec.get("summary", ""), "forecast": rec.get("forecast", "")},
                             "source_file_path": input_file_path,
                             "due_date": rec.get("due_date")
                         }
