@@ -36,9 +36,21 @@ def process_file(file_bytes: bytes) -> list[dict]:
     client = OpenAI(api_key=os.environ["DEEPSEEK_API_KEY"], base_url="https://api.deepseek.com")
     system_prompt = (
         "You are an AI assistant that extracts structured job profitability data from documents. "
-        "Given the extracted text, identify each job/project. For each job, output a JSON array with these fields: "
-        "title (string), status (exactly 'over_budget:critical' or 'within_budget:good'), "
-        "details (object with numeric data), due_date (ISO date or null). "
+        "Given the extracted text, identify each job/project. For each job, output a JSON array with these fields:\n"
+        "- title (string): the job or project name\n"
+        "- status (string): one of exactly these values:\n"
+        "    'over_budget:critical'      — already over budget\n"
+        "    'margin_declining:warning'  — spending faster than expected, at risk\n"
+        "    'on_track:good'             — within budget, healthy margin\n"
+        "    'within_budget:good'        — under budget\n"
+        "    'completed:neutral'         — job is finished\n"
+        "- details (object): include all numeric data found — estimate, actual_cost, revenue, "
+        "margin_percent, labor_cost, materials_cost, remaining_budget, percent_complete\n"
+        "- due_date (ISO date string or null)\n"
+        "- summary (string): 1-2 plain English sentences explaining the job's financial situation "
+        "and WHY it is over/under budget or at risk. Be specific — mention actual numbers.\n"
+        "- forecast (string): 1 sentence predicting final profitability based on current spend rate. "
+        "Example: 'At current spend rate, this job will finish 15% over budget.'\n"
         "Return ONLY the JSON array, no markdown, no other text."
     )
     user_prompt = f"Document text:\n{text_content}\n\nExtract the data as specified."
@@ -57,7 +69,14 @@ def process_file(file_bytes: bytes) -> list[dict]:
         result_text = result_text.strip().replace("```json", "").replace("```", "").strip()
         records = json.loads(result_text)
         if isinstance(records, list):
-            return [{"title": r.get("title",""), "status": r.get("status","within_budget:good"), "details": r.get("details",{}), "due_date": r.get("due_date")} for r in records]
+            return [{
+                "title": r.get("title", ""),
+                "status": r.get("status", "on_track:good"),
+                "details": r.get("details", {}),
+                "due_date": r.get("due_date"),
+                "summary": r.get("summary", ""),
+                "forecast": r.get("forecast", "")
+            } for r in records]
         return []
     except Exception as e:
         print(f"Processor error: {e}")
