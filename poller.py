@@ -70,7 +70,7 @@ def main():
                             "customer_id": customer_id,
                             "title": rec.get("title", "Job Report"),
                             "status": rec.get("status", "within_budget:good"),
-                            "details": json.dumps(rec.get("details", {})),
+                            "details": rec.get("details", {}),
                             "source_file_path": input_file_path,
                             "due_date": rec.get("due_date")
                         }
