@@ -54,3 +54,5 @@ Railway: independent-contractor-smb-monthly-actua
 Cloudflare: independent-contractor-smb-monthly-actua.vokrix.co
 
 Billing: price_1U1Mh32c9uGCcgMSDDIQ6pP9
+
+Landing: https://vokrix.co/independent-contractor-smb-monthly-actua
